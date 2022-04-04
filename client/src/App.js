@@ -1,25 +1,24 @@
-import logo from './logo.svg';
-import './App.css';
+import { connect } from "react-redux";
+import { Route, Routes } from "react-router-dom";
+import Navbar from "./components/navbar";
+import Home from "./pages/home";
+import Landing from "./pages/landing";
+import Login from "./pages/login";
+import Register from "./pages/register";
 
-function App() {
+function App({ user }) {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="flex flex-col h-full w-full bg-gray-100 text-gray-900">
+      <Navbar user={user} />
+      <Routes>
+        <Route path="/landing" element={<Landing />}></Route>
+        <Route path="/login" element={<Login />}></Route>
+        <Route path="/register" element={<Register />}></Route>
+        <Route path="/home" element={<Home />}></Route>
+      </Routes>
     </div>
   );
 }
 
-export default App;
+// @ts-ignore
+export default connect((state) => ({ user: state.nir.user }))(App);
