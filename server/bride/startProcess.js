@@ -2,7 +2,7 @@ import { spawn } from "child_process";
 import config from "../utils/config.js";
 import { pdebug, perror, pfatal } from "../utils/logger.js";
 import { startCores } from "./bride.js";
-import { addProcess, updateProcess } from "./processes.js";
+import { addProcess, removeProcess, updateProcess } from "./processes.js";
 import { requests } from "./requests.js";
 /** @type {(arr:import("./processes").Process[],path:string) => void} */
 function startProcess(arr, path) {
@@ -11,6 +11,7 @@ function startProcess(arr, path) {
 
   proc.on("exit", (code, signal) => {
     perror(`startProcess.proc.on.exit code:${code} signal:${signal} pid:${proc.pid}`);
+    removeProcess(arr, proc);
     startCores();
   });
 
@@ -30,9 +31,15 @@ function startProcess(arr, path) {
     let reduceBatchSize = 0;
     for (const base64e of base64Arr) {
       const [rid, ...payload] = base64e.split(" ");
-      requests[rid].resolve(payload);
-      delete requests[rid];
-      reduceBatchSize += 1;
+      if (!Number.isNaN(parseInt(rid))) {
+        requests[rid].resolve(payload);
+        delete requests[rid];
+        reduceBatchSize += 1;
+      } else {
+        proc.kill();
+        removeProcess(arr, proc);
+        startCores();
+      }
     }
     updateProcess(arr, proc, { reduceBatchSize });
     pdebug("proc.stdout.on.data end");
@@ -40,26 +47,27 @@ function startProcess(arr, path) {
 
   let errHalf = "";
   proc.stderr.on("data", (chunk) => {
-    try {
-      pdebug("proc.stderr.on.data start");
-      const base64 = chunk.toString();
-      pfatal(base64);
-      const base64Arr = base64.split("\n");
-      base64Arr[0] = errHalf.concat(base64Arr[0]);
-      errHalf = base64Arr.pop();
-      let reduceBatchSize = 0;
-      for (const base64e of base64Arr) {
-        const [rid, ...payload] = base64e.split(" ");
+    pdebug("proc.stderr.on.data start");
+    const base64 = chunk.toString();
+    pdebug(base64);
+    const base64Arr = base64.split("\n");
+    pdebug(base64Arr);
+    base64Arr[0] = errHalf.concat(base64Arr[0]);
+    errHalf = base64Arr.pop();
+    let reduceBatchSize = 0;
+    for (const base64e of base64Arr) {
+      const [rid, ...payload] = base64e.split(" ");
+      if (!Number.isNaN(parseInt(rid))) {
         requests[rid].reject(new Error(payload[0]));
         delete requests[rid];
         reduceBatchSize += 1;
+      } else {
+        proc.kill();
+        removeProcess(arr, proc);
+        startCores();
       }
-      updateProcess(arr, proc, { reduceBatchSize });
-    } catch (err) {
-      pfatal("XXX");
-      pfatal(chunk.toString());
-      pfatal(err);
     }
+    updateProcess(arr, proc, { reduceBatchSize });
     pdebug("proc.stderr.on.data end");
   });
 

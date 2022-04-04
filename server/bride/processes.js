@@ -10,7 +10,7 @@
 import config from "../utils/config.js";
 import { pdebug } from "../utils/logger.js";
 import { requests } from "./requests.js";
-
+import { pQuery } from "../utils/postgres.js";
 /** @type {Process[]} */
 const detections = [];
 // @ts-ignore
@@ -97,4 +97,27 @@ function cleanProceses() {
   pdebug("cleanProceses end");
 }
 
-export { cleanProceses, assignProcess, addProcess, updateProcess, removeProcess, detections, extractions, recognitions };
+setTimeout(function gpuBatchSizes() {
+  setTimeout(gpuBatchSizes, Math.round(Math.random() * config.LOG_METRIC_AVG_DURATION_IN_MS));
+  pQuery({
+    sql: "insert into monitoring.gpu_batch_sizes values (default,default,$1)",
+    parameters: [
+      {
+        detections: detections.map((e) => e.batchSize),
+        extractions: extractions.map((e) => e.batchSize),
+        recognitions: recognitions.map((e) => e.batchSize),
+      },
+    ],
+  });
+}, Math.round(Math.random() * config.LOG_METRIC_AVG_DURATION_IN_MS));
+
+export {
+  cleanProceses,
+  assignProcess,
+  addProcess,
+  updateProcess,
+  removeProcess,
+  detections,
+  extractions,
+  recognitions,
+};

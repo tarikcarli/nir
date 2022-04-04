@@ -50,3 +50,11 @@ CREATE TABLE nir.role_permission(
 	FOREIGN KEY (permission_id) REFERENCES permissions(id)
 );
 
+create table monitoring.gpu_batch_sizes(
+	id serial primary key,
+	creation_time timestamptz not null default now(),
+	"log" jsonb not null
+);
+create index on monitoring.gpu_batch_sizes using gin ("log");
+
+
