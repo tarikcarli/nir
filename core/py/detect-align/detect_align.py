@@ -27,9 +27,9 @@ while(True):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     
     faces = face_cascade.detectMultiScale(gray, 1.1, 4)
-    # if(len(faces) == 0):
-    #     print(rid + ' ' + 'NO_FACE_FOUND', file=sys.stderr)
-    #     continue
+    if(len(faces) == 0):
+        print(rid + ' ' + 'NO_FACE_FOUND', file=sys.stderr)
+        continue
     # if(len(faces) > 1):
     #     print(rid + ' ' + 'MULTIPLE_FACE_FOUND', file=sys.stderr)
     #     continue
@@ -41,6 +41,9 @@ while(True):
     # roi_color=img[y:(y+h), x:(x+w)]
     
     eyes = eye_cascade.detectMultiScale(roi_gray, 1.1, 4)
+    if(len(eyes) != 2):
+        print(rid + ' ' + 'NO_EYES_FOUND', file=sys.stderr)
+        continue
     index=0
     for (ex , ey,  ew,  eh) in eyes:
         if index == 0:
@@ -95,9 +98,9 @@ while(True):
 
     faces = face_cascade.detectMultiScale(gray, 1.1, 4)
 
-    # if(len(faces) == 0):
-    #     print(rid + ' ' + 'NO_FACE_FOUND', file=sys.stderr)
-    #     continue
+    if(len(faces) == 0):
+        print(rid + ' ' + 'NO_FACE_FOUND', file=sys.stderr)
+        continue
     # if(len(faces) > 1):
     #     print(rid + ' ' + 'MULTIPLE_FACE_FOUND', file=sys.stderr)
     #     continue
