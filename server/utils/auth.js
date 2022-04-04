@@ -1,3 +1,4 @@
+import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import config from "./config.js";
 
@@ -27,5 +28,12 @@ async function createToken(data) {
     });
   });
 }
-
-export { setCookie, clearCookie, createToken };
+function createHash(password) {
+  return new Promise((resolve, reject) => {
+    bcrypt.hash(password, 10, function (err, hash) {
+      if (err) reject(err);
+      if (!err) resolve(hash);
+    });
+  });
+}
+export { setCookie, clearCookie, createToken, createHash };

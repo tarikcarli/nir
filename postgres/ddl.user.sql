@@ -12,6 +12,7 @@ CREATE TABLE nir.users (
 	update_time timestamptz,
 	delete_time timestamptz
 );
+alter table users add column active boolean not null default false;
 
 CREATE TABLE nir.user_requests(
 	user_id int4 PRIMARY KEY REFERENCES users(id),
@@ -63,3 +64,13 @@ create table monitoring.http_request_metrics(
 	"log" jsonb not null
 );
 create index on monitoring.http_request_metrics using gin ("log");
+
+
+create table user_hashes(
+	id serial primary key,
+	user_id int4,
+	hash text,
+	creation_time timestamptz not null default now(),
+	FOREIGN KEY (user_id) REFERENCES users(id)
+);
+

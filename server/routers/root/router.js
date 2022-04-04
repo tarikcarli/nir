@@ -1,9 +1,9 @@
 import express from "express";
-import { router as detectionRouter } from "../core/detection.js";
-import { router as verifyRouter } from "../core/verify.js";
+import { router as coreRouter } from "../core/core.js";
+import { router as userRouter } from "../user/user.js";
 const router = express.Router();
 
-router.use(detectionRouter);
-router.use(verifyRouter);
+router.use(coreRouter);
+router.use(userRouter);
 
 export { router };

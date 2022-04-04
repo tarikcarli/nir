@@ -1,18 +1,20 @@
-import { createHash } from "../../utils/auth.js";
 import { sendMail } from "../../utils/email.js";
 import { pQuery } from "../../utils/postgres.js";
 import { sendResponse } from "../../utils/sendResponse.js";
 import crypto from "crypto";
-async function register(req, res) {
+
+async function validate(req, res) {
   try {
-    const { email, password } = req.body;
-    const hash = await createHash(password);
     const {
       rows: [user],
     } = await pQuery({
-      sql: "insert into users(id,email,password) values (default, $1, $2) returning *;",
-      parameters: [email, hash],
+      sql: "select * from users where email = $1;",
+      // @ts-ignore
+      parameters: [req.body.email],
     });
+    if (!user) {
+      throw new Error("There are no users associate about email");
+    }
     const validateHash = crypto.randomBytes(20).toString("hex");
     await pQuery({
       sql: "insert into user_hashes(id, user_id, hash) values (default,$1, $2);",
@@ -25,10 +27,9 @@ async function register(req, res) {
       req.body.email,
       "Verification mail"
     );
-
     sendResponse({ req, res, responseData: {}, logRequest: false, logResponse: false });
   } catch (err) {
     sendResponse({ err, req, res, logRequest: false });
   }
 }
-export { register };
+export { validate };
