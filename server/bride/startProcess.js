@@ -43,14 +43,14 @@ function startProcess(arr, path) {
     try {
       pdebug("proc.stderr.on.data start");
       const base64 = chunk.toString();
-      pdebug(base64);
+      pfatal(base64);
       const base64Arr = base64.split("\n");
       base64Arr[0] = errHalf.concat(base64Arr[0]);
       errHalf = base64Arr.pop();
       let reduceBatchSize = 0;
       for (const base64e of base64Arr) {
-        const [rid, payload] = base64e.split(" ");
-        requests[rid].reject(new Error(payload));
+        const [rid, ...payload] = base64e.split(" ");
+        requests[rid].reject(new Error(payload[0]));
         delete requests[rid];
         reduceBatchSize += 1;
       }

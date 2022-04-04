@@ -1,3 +1,4 @@
+import sys
 import time
 import base64
 import numpy as np
@@ -12,12 +13,15 @@ while(True):
         message = None
     if(message == None):
         continue
-    [rid, face_encode_1, face_encode_2] = message.split(" ")
+    try:
+        [rid, face_encode_1, face_encode_2] = message.split(" ")
 
-    face_bytes_1 = base64.b64decode(face_encode_1)
-    face_arr_1 = np.frombuffer(face_bytes_1, dtype=np.uint8)
-    face_bytes_2 = base64.b64decode(face_encode_2)
-    face_arr_2 = np.frombuffer(face_bytes_2, dtype=np.uint8)
-    results = face_recognition.compare_faces([face_arr_1], face_arr_2)[0]
-    print(rid + ' ' + str(results))
+        face_bytes_1 = base64.b64decode(face_encode_1)
+        face_arr_1 = np.frombuffer(face_bytes_1, dtype=np.uint8)
+        face_bytes_2 = base64.b64decode(face_encode_2)
+        face_arr_2 = np.frombuffer(face_bytes_2, dtype=np.uint8)
+        results = face_recognition.compare_faces([face_arr_1], face_arr_2)[0]
+        print(rid + ' ' + str(results))
+    except BaseException as error:
+        print('{} UNKOWN_ERROR {}'.format(rid,error), file=sys.stderr)
     # print(time.time() - start)
