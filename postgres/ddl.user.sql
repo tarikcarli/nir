@@ -57,4 +57,9 @@ create table monitoring.gpu_batch_sizes(
 );
 create index on monitoring.gpu_batch_sizes using gin ("log");
 
-
+create table monitoring.http_request_metrics(
+	id serial primary key,
+	creation_time timestamptz not null default now(),
+	"log" jsonb not null
+);
+create index on monitoring.http_request_metrics using gin ("log");

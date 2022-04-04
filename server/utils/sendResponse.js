@@ -1,4 +1,5 @@
 import { pdebug } from "./logger.js";
+import { pQuery } from "./postgres.js";
 
 /**
  * @type {(first:{
@@ -40,9 +41,22 @@ async function sendResponse({
   if (redirectUrl) {
     return res.redirect(redirectUrl);
   }
+  // @ts-ignore
+  const { metric } = req;
+  let metricData = {};
+  if (metric) {
+    metricData = metric.end();
+    pQuery({
+      sql: "insert into monitoring.http_request_metrics values (default,default,$1)",
+      parameters: [{ ...metricData, url }],
+    });
+  }
   if (err) {
-    res.status(responseStatus >= 200 && responseStatus < 300 ? 400 : responseStatus).json({ message: err.message });
+    res
+      .status(responseStatus >= 200 && responseStatus < 300 ? 400 : responseStatus)
+      .json({ message: err.message, metrics: metricData });
   } else {
+    responseData.metrics = metricData;
     res.status(responseStatus).json(responseData);
   }
   pdebug("sendResponse end");

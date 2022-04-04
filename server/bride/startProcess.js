@@ -24,12 +24,14 @@ function startProcess(arr, path) {
   proc.stdout.on("data", (chunk) => {
     pdebug("proc.stdout.on.data start");
     const base64 = chunk.toString();
-    // pdebug(base64);
+    // pdebug(`outHalf ${outHalf}`);
+    // pdebug(`base64 ${base64}`);
     const base64Arr = base64.split("\n");
     base64Arr[0] = outHalf.concat(base64Arr[0]);
     outHalf = base64Arr.pop();
     let reduceBatchSize = 0;
     for (const base64e of base64Arr) {
+      pdebug(`base64e ${base64e}`);
       const [rid, ...payload] = base64e.split(" ");
       if (!Number.isNaN(parseInt(rid))) {
         requests[rid].resolve(payload);
@@ -49,13 +51,14 @@ function startProcess(arr, path) {
   proc.stderr.on("data", (chunk) => {
     pdebug("proc.stderr.on.data start");
     const base64 = chunk.toString();
-    pdebug(base64);
+    // pdebug(base64);
     const base64Arr = base64.split("\n");
-    pdebug(base64Arr);
+    // pdebug(base64Arr);
     base64Arr[0] = errHalf.concat(base64Arr[0]);
     errHalf = base64Arr.pop();
     let reduceBatchSize = 0;
     for (const base64e of base64Arr) {
+      pdebug(`base64e ${base64e}`);
       const [rid, ...payload] = base64e.split(" ");
       if (!Number.isNaN(parseInt(rid))) {
         requests[rid].reject(new Error(payload[0]));

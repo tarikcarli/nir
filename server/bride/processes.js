@@ -103,8 +103,11 @@ setTimeout(function gpuBatchSizes() {
     sql: "insert into monitoring.gpu_batch_sizes values (default,default,$1)",
     parameters: [
       {
+        td: detections.reduce((acc, e) => acc + e.batchSize, 0),
         detections: detections.map((e) => e.batchSize),
+        te: extractions.reduce((acc, e) => acc + e.batchSize, 0),
         extractions: extractions.map((e) => e.batchSize),
+        tr: recognitions.reduce((acc, e) => acc + e.batchSize, 0),
         recognitions: recognitions.map((e) => e.batchSize),
       },
     ],
