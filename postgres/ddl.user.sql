@@ -1,3 +1,7 @@
+CREATE SCHEMA nir;
+
+CREATE SCHEMA monitoring;
+
 CREATE TABLE nir.users (
 	id serial PRIMARY KEY,
 	first_name TEXT,
@@ -45,6 +49,4 @@ CREATE TABLE nir.role_permission(
 	FOREIGN KEY (role_id) REFERENCES roles(id),
 	FOREIGN KEY (permission_id) REFERENCES permissions(id)
 );
-
-SELECT   FROM permissions
 
