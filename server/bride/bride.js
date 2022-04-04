@@ -10,6 +10,7 @@ function startCore(instanceSize, startFunction) {
     i += 1;
   }
 }
+// @ts-ignore
 const dirname = import.meta.url.replace("file://", "");
 function startCores() {
   startCore(config.DETECTION_INSTANCE_SIZE - detections.length, () =>

@@ -1,6 +1,6 @@
 import { spawn } from "child_process";
 import config from "../utils/config.js";
-import { pdebug, perror } from "../utils/logger.js";
+import { pdebug, perror, pfatal } from "../utils/logger.js";
 import { startCores } from "./bride.js";
 import { addProcess, updateProcess } from "./processes.js";
 import { requests } from "./requests.js";
@@ -40,20 +40,26 @@ function startProcess(arr, path) {
 
   let errHalf = "";
   proc.stderr.on("data", (chunk) => {
-    pdebug("proc.stderr.on.data start");
-    const base64 = chunk.toString();
-    pdebug(base64);
-    const base64Arr = base64.split("\n");
-    base64Arr[0] = errHalf.concat(base64Arr[0]);
-    errHalf = base64Arr.pop();
-    let reduceBatchSize = 0;
-    for (const base64e of base64Arr) {
-      const [rid, payload] = base64e.split(" ");
-      requests[rid].reject(new Error(payload));
-      delete requests[rid];
-      reduceBatchSize += 1;
+    try {
+      pdebug("proc.stderr.on.data start");
+      const base64 = chunk.toString();
+      pdebug(base64);
+      const base64Arr = base64.split("\n");
+      base64Arr[0] = errHalf.concat(base64Arr[0]);
+      errHalf = base64Arr.pop();
+      let reduceBatchSize = 0;
+      for (const base64e of base64Arr) {
+        const [rid, payload] = base64e.split(" ");
+        requests[rid].reject(new Error(payload));
+        delete requests[rid];
+        reduceBatchSize += 1;
+      }
+      updateProcess(arr, proc, { reduceBatchSize });
+    } catch (err) {
+      pfatal("XXX");
+      pfatal(chunk.toString());
+      pfatal(err);
     }
-    updateProcess(arr, proc, { reduceBatchSize });
     pdebug("proc.stderr.on.data end");
   });
 
