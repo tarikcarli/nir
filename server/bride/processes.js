@@ -1,29 +1,21 @@
 /**
  * @typedef {{
  *  proc: import("child_process").ChildProcess,
- *  ready: boolean,
- *  batchSize: number,
- *  loadTime: Date,
+ *  load: number,
+ *  ts: number,
  * }} Process
  * */
 
 import config from "../utils/config.js";
-import { pdebug } from "../utils/logger.js";
+import { pdebug, perror } from "../utils/logger.js";
 import { requests } from "./requests.js";
 import { pQuery } from "../utils/postgres.js";
 /** @type {Process[]} */
 const detections = [];
-// @ts-ignore
-detections.batchSize = config.DETECTION_BATCH_SIZE;
 /** @type {Process[]} */
 const extractions = [];
-// @ts-ignore
-extractions.batchSize = config.EXTRACTION_BATCH_SIZE;
 /** @type {Process[]} */
 const recognitions = [];
-// @ts-ignore
-recognitions.batchSize = config.RECOGNITION_BATCH_SIZE;
-
 const next = (() => {
   const indexs = new Map();
   /**@type {(arr:any[]) => number} */
@@ -45,38 +37,30 @@ function addProcess(arr, process) {
 function assignProcess(arr, rid, base64) {
   pdebug("assignProcess start");
   const request = new Promise((resolve, reject) => {
-    let attemp = 0;
-    let i = next(arr);
-    // @ts-ignore
-    while (attemp < arr.length && !arr[i].ready && arr[i].batchSize > arr.batchSize) {
-      i = next(arr);
-      attemp += 1;
+    try {
+      let i = next(arr);
+      arr[i].proc.stdin.write(rid.toString());
+      arr[i].proc.stdin.write(config.PROPERTY_SEPERATOR);
+      arr[i].proc.stdin.write(base64);
+      arr[i].proc.stdin.write(config.LINE_SEPERATOR);
+      arr[i].load += 1;
+      requests[rid] = { resolve, reject, ts: Date.now() };
+    } catch (err) {
+      perror("assignProcess.Promise.catch");
+      perror(err);
     }
-    if (attemp >= arr.length) {
-      reject(new Error("NO_AVAILABLE_CORES"));
-    }
-    // arr[i].proc.stdin.write(`${rid} ${base64}\n`);
-    arr[i].proc.stdin.write(rid.toString());
-    arr[i].proc.stdin.write(" ");
-    arr[i].proc.stdin.write(base64);
-    arr[i].proc.stdin.write("\n");
-    arr[i].batchSize += 1;
-    requests[rid] = { resolve, reject };
   });
   pdebug("assignProcess end");
   return request;
 }
-/** @type {(arr:Process[],proc:import("child_process").ChildProcess,properties:{ready?:boolean,reduceBatchSize?:number}) => void} */
+/** @type {(arr:Process[],proc:import("child_process").ChildProcess,properties:{reduceLoad?:number,ts?:number}) => void} */
 function updateProcess(arr, proc, properties) {
   arr.forEach((e) => {
     if (e.proc !== proc) {
       return;
     }
-    if (properties.ready) {
-      e.ready = properties.ready;
-    }
-    if (properties.reduceBatchSize) {
-      e.batchSize -= properties.reduceBatchSize;
+    if (properties.reduceLoad) {
+      e.load -= properties.reduceLoad;
     }
   });
 }
@@ -97,30 +81,38 @@ function cleanProceses() {
   pdebug("cleanProceses end");
 }
 
-setTimeout(function gpuBatchSizes() {
+setTimeout(gpuBatchSizes, Math.round(Math.random() * config.LOG_METRIC_AVG_DURATION_IN_MS));
+function gpuBatchSizes() {
   setTimeout(gpuBatchSizes, Math.round(Math.random() * config.LOG_METRIC_AVG_DURATION_IN_MS));
   pQuery({
     sql: "insert into monitoring.gpu_batch_sizes values (default,default,$1)",
     parameters: [
       {
-        td: detections.reduce((acc, e) => acc + e.batchSize, 0),
-        detections: detections.map((e) => e.batchSize),
-        te: extractions.reduce((acc, e) => acc + e.batchSize, 0),
-        extractions: extractions.map((e) => e.batchSize),
-        tr: recognitions.reduce((acc, e) => acc + e.batchSize, 0),
-        recognitions: recognitions.map((e) => e.batchSize),
+        totalDetectionsLoad: detections.reduce((acc, e) => acc + e.load, 0),
+        detectionsLoad: detections.map((e) => e.load),
+        totalExtractionsLoad: extractions.reduce((acc, e) => acc + e.load, 0),
+        extractionsLoad: extractions.map((e) => e.load),
+        totalRecognitionsLoad: recognitions.reduce((acc, e) => acc + e.load, 0),
+        recognitionsLoad: recognitions.map((e) => e.load),
       },
     ],
   });
-}, Math.round(Math.random() * config.LOG_METRIC_AVG_DURATION_IN_MS));
+}
 
-export {
-  cleanProceses,
-  assignProcess,
-  addProcess,
-  updateProcess,
-  removeProcess,
-  detections,
-  extractions,
-  recognitions,
-};
+setTimeout(sendPingToProcess, Math.round(Math.random() * config.CORE_PING_INTERVAL_IN_MS));
+function sendPingToProcess() {
+  setTimeout(sendPingToProcess, Math.round(Math.random() * config.CORE_PING_INTERVAL_IN_MS));
+  let i = 0;
+  while (i < detections.length) {
+    assignProcess(detections, -1, "");
+  }
+  i = 0;
+  while (i < extractions.length) {
+    assignProcess(extractions, -1, "");
+  }
+  i = 0;
+  while (i < recognitions.length) {
+    assignProcess(recognitions, -1, "");
+  }
+}
+export { cleanProceses, assignProcess, addProcess, updateProcess, removeProcess, detections, extractions, recognitions };

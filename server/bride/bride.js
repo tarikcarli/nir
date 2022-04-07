@@ -12,15 +12,17 @@ function startCore(instanceSize, startFunction) {
 }
 // @ts-ignore
 const dirname = import.meta.url.replace("file://", "");
+console.log(dirname);
+console.log(path.join(dirname, "..", "..", "..", "core/py/detect-align/detect_align.py"));
 function startCores() {
   startCore(config.DETECTION_INSTANCE_SIZE - detections.length, () =>
-    startProcess(detections, path.join(dirname, "..", "..", "..", "core/py/detect-align/detect_align.py"))
+    startProcess(detections, "python3", [path.join(dirname, "..", "..", "..", "core/py/detect-align/detect_align.py")])
   );
   startCore(config.EXTRACTION_INSTANCE_SIZE - extractions.length, () =>
-    startProcess(extractions, path.join(dirname, "..", "..", "..", "core/py/extractor/extractor.py"))
+    startProcess(extractions, "python3", [path.join(dirname, "..", "..", "..", "core/py/extractor/extractor.py")])
   );
   startCore(config.RECOGNITION_INSTANCE_SIZE - recognitions.length, () =>
-    startProcess(recognitions, path.join(dirname, "..", "..", "..", "core/py/recognizer/recognizer.py"))
+    startProcess(recognitions, "python3", [path.join(dirname, "..", "..", "..", "core/py/recognizer/recognizer.py")])
   );
 }
 export { startCores };

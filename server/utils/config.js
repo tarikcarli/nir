@@ -16,17 +16,14 @@ const config = {
   NODE_MAILLER_USERNAME: process.env.NODE_MAILLER_USERNAME,
   NODE_MAILLER_PASSWORD: process.env.NODE_MAILLER_PASSWORD,
   LOG_LEVEL: process.env.LOG_LEVEL,
-  LOG_METRIC_AVG_DURATION_IN_MS: Number(process.env.LOG_METRIC_AVG_DURATION_IN_MS),
-  DETECTION_BATCH_SIZE: Number(process.env.DETECTION_BATCH_SIZE),
-  EXTRACTION_BATCH_SIZE: Number(process.env.EXTRACTION_BATCH_SIZE),
-  RECOGNITION_BATCH_SIZE: Number(process.env.RECOGNITION_BATCH_SIZE),
-  DETECTION_INSTANCE_SIZE: Number(process.env.DETECTION_INSTANCE_SIZE),
-  EXTRACTION_INSTANCE_SIZE: Number(process.env.EXTRACTION_INSTANCE_SIZE),
-  RECOGNITION_INSTANCE_SIZE: Number(process.env.RECOGNITION_INSTANCE_SIZE),
-  CORE_INITIALISATION_DURATION_MS: Number(process.env.CORE_INITIALISATION_DURATION_MS),
+  LOG_METRIC_AVG_DURATION_IN_MS: Number(process.env.LOG_METRIC_AVG_DURATION_IN_MS) * 2,
+  REQUEST_TIMEOUT_IN_MS: Number(process.env.REQUEST_TIMEOUT_IN_MS),
+  CORE_PING_INTERVAL_IN_MS: Number(process.env.CORE_PING_INTERVAL_IN_MS),
+  PROPERTY_SEPERATOR: process.env.PROPERTY_SEPERATOR,
+  LINE_SEPERATOR: process.env.LINE_SEPERATOR,
 };
 for (const key in config) {
-  if (config[key] == null) {
+  if (Number.isNaN(config[key]) || config[key] == null) {
     throw new Error(`config propery ${key} cannot be null`);
   }
 }
